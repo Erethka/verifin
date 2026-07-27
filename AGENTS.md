@@ -32,6 +32,7 @@ Android 安装包不在本机打包；最终 APK/AAB 由 GitHub CI 负责生成�
 - 需要触感（`hapticsEnabled`）的组件由 helper 内部从 `VeriFinScope` 取，调用方不手传。
 
 ### 颜色 / 格式化 / 设计令牌
+- **日期算术**：「两个日期相隔几天」用 `calendarDaysBetween`，「往后/往前推 N 天」用 `addCalendarDays`（`calendar_days.dart`，经 `ledger_math.dart` re-export）。**禁止裸用 `difference().inDays` 与 `add(Duration(days: n))`** 表达日历日——它们算的是绝对时间，夏令时地区的一天可能是 23 或 25 小时，会少算一天、或让时刻漂移一小时（提醒时间偏移、「今天/昨天」标错、统计天数少 1）。这类缺陷在 UTC 与中国时区都不显现，**CI 恒绿**，只在欧美时区的开发机 / 用户手机上暴露。纯粹的时间间隔（如「2 秒内再次返回」「每隔 N 小时备份」）仍用 `Duration`，那才是绝对时间语义。
 - 金额上色只用 `colorForType` / `accountBalanceColor`；金额文本只用 `formatAmount` / `formatSignedAmount` / `formatCompactAmount`；日期 / 月份只用 l10n 的 `dateMonthDay` / `yearMonth`。**禁止内联手拼**金额或日期字符串。
 - 颜色用 `veri*` 常量、圆角用 `veriRadius*`、主色 `#346edb`（`veriRoyal`）。禁止裸写 `Color(0x...)` 或魔法圆角；局部确需的特例（如键盘配色）须注释理由。
 

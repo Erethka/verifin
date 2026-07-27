@@ -17,7 +17,7 @@ DateTime nextDueDate(int dueDay, DateTime now) {
 
 /// 距离下一个还款日的天数（今天为 0）。
 int daysUntilDue(int dueDay, DateTime now) {
-  return nextDueDate(dueDay, now).difference(dateOnly(now)).inDays;
+  return calendarDaysBetween(now, nextDueDate(dueDay, now));
 }
 
 /// 已用额度（当前欠款）：账户负余额的绝对值，非负；余额为正（存入/超额还款）时为 0。

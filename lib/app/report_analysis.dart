@@ -51,7 +51,7 @@ class ReportRange {
   DateWindow get window => DateWindow(start: start, end: end);
 
   /// 含起止的天数。
-  int get dayCount => end.difference(start).inDays + 1;
+  int get dayCount => calendarDaysBetween(start, end) + 1;
 
   /// 展示用文案（月/年按当前语言格式化，自定义范围为数字、语言无关）。
   String label(AppLocalizations l10n) {
@@ -462,7 +462,7 @@ ReportTrend _monthlyTrend(
     index[_monthKey(months[i].year, months[i].month)] = i;
   }
   final startDay = range.start;
-  final endExclusive = range.end.add(const Duration(days: 1));
+  final endExclusive = addCalendarDays(range.end, 1);
   for (final entry in entries) {
     if (entry.type != type) {
       continue;

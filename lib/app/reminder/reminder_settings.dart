@@ -31,12 +31,15 @@ class ReminderSettings {
       '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 
   /// 从 [from] 起下一次触发时刻：今天该时刻若已过则顺延到明天。
+  ///
+  /// 顺延按「日历日 +1」构造而非 `add(Duration(days: 1))`——后者是绝对 24 小时，
+  /// 跨夏令时切换会把提醒推到次日的 hour±1，用户设 21:00 却在 20:00/22:00 响。
   DateTime nextFireTime(DateTime from) {
-    var candidate = DateTime(from.year, from.month, from.day, hour, minute);
-    if (!candidate.isAfter(from)) {
-      candidate = candidate.add(const Duration(days: 1));
+    final candidate = DateTime(from.year, from.month, from.day, hour, minute);
+    if (candidate.isAfter(from)) {
+      return candidate;
     }
-    return candidate;
+    return DateTime(from.year, from.month, from.day + 1, hour, minute);
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{

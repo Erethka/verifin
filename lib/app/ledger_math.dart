@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'amount_format.dart';
 import 'app_theme.dart';
+import 'calendar_days.dart';
 import 'models.dart';
 import '../l10n/app_localizations.dart';
+
+// 日历日算术（跨夏令时稳定）随 ledger_math 一并提供，调用点 import 不变。
+export 'calendar_days.dart';
 
 double signedAmount(LedgerEntry entry) {
   switch (entry.type) {
@@ -83,10 +87,7 @@ class DateWindow {
     // 用「按日构造」而非 start.add(Duration(days:))，避免 DST 地区跨夏令时偏移一小时
     // 导致标签/边界落到相邻日；count 下限 0 防 end<start 时 List.generate 抛异常。
     final startDay = dateOnly(start);
-    final count = (dateOnly(end).difference(startDay).inDays + 1).clamp(
-      0,
-      100000,
-    );
+    final count = (calendarDaysBetween(startDay, end) + 1).clamp(0, 100000);
     return List<DateTime>.generate(
       count,
       (index) => DateTime(startDay.year, startDay.month, startDay.day + index),
@@ -174,7 +175,7 @@ List<LedgerEntry> entriesInWindow(
   DateWindow window,
 ) {
   final start = dateOnly(window.start);
-  final endExclusive = dateOnly(window.end).add(const Duration(days: 1));
+  final endExclusive = addCalendarDays(dateOnly(window.end), 1);
   return entries.where((entry) {
     final date = entry.occurredAt;
     return !date.isBefore(start) && date.isBefore(endExclusive);

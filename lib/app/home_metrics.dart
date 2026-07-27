@@ -239,8 +239,8 @@ bool _inToday(LedgerEntry entry, DateTime now) =>
 
 bool _inWeek(LedgerEntry entry, DateTime now) {
   // 本周为周一至周日（含今天所在周）。weekday: 周一=1 … 周日=7。
-  final start = dateOnly(now).subtract(Duration(days: now.weekday - 1));
-  final endExclusive = start.add(const Duration(days: 7));
+  final start = addCalendarDays(dateOnly(now), -(now.weekday - 1));
+  final endExclusive = addCalendarDays(start, 7);
   final date = entry.occurredAt;
   return !date.isBefore(start) && date.isBefore(endExclusive);
 }

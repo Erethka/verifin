@@ -36,14 +36,14 @@ String _formatAxisAmount(num value) {
 String twoDigitYear(int year) => (year % 100).toString().padLeft(2, '0');
 
 int isoWeekYear(DateTime date) {
-  return date.add(Duration(days: 4 - date.weekday)).year;
+  return addCalendarDays(date, 4 - date.weekday).year;
 }
 
 int isoWeekNumber(DateTime date) {
-  final thursday = date.add(Duration(days: 4 - date.weekday));
+  final thursday = addCalendarDays(date, 4 - date.weekday);
   final firstThursday = DateTime(thursday.year, 1, 4);
-  final weekOne = firstThursday.add(Duration(days: 4 - firstThursday.weekday));
-  return thursday.difference(weekOne).inDays ~/ 7 + 1;
+  final weekOne = addCalendarDays(firstThursday, 4 - firstThursday.weekday);
+  return calendarDaysBetween(weekOne, thursday) ~/ 7 + 1;
 }
 
 /// 当月每日余额:基线包含本月之前的全部历史流水,余额保留正负号。
@@ -179,7 +179,7 @@ int bookkeepingDays(List<LedgerEntry> entries) {
   final first = entries
       .map((entry) => entry.occurredAt)
       .reduce((a, b) => a.isBefore(b) ? a : b);
-  return DateTime.now().difference(first).inDays + 1;
+  return calendarDaysBetween(first, DateTime.now()) + 1;
 }
 
 /// 记账时长的展示文案:一年以内显示天数,超过一年显示 1.2、2 这样的年数。

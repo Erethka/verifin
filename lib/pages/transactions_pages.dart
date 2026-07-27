@@ -343,13 +343,15 @@ class _TransactionsPageState extends State<TransactionsPage> {
                               _DateFilterBar(
                                 date: _visibleDate,
                                 onPrevious: () => setState(() {
-                                  _visibleDate = _visibleDate.subtract(
-                                    const Duration(days: 1),
+                                  _visibleDate = addCalendarDays(
+                                    _visibleDate,
+                                    -1,
                                   );
                                 }),
                                 onNext: () => setState(() {
-                                  _visibleDate = _visibleDate.add(
-                                    const Duration(days: 1),
+                                  _visibleDate = addCalendarDays(
+                                    _visibleDate,
+                                    1,
                                   );
                                 }),
                                 onTap: _pickTimeFilter,
@@ -558,7 +560,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
       if (period == null) {
         filtered = scopedEntries;
       } else {
-        final endExclusive = period.end.add(const Duration(days: 1));
+        final endExclusive = addCalendarDays(period.end, 1);
         filtered = scopedEntries
             .where(
               (entry) =>
@@ -932,27 +934,18 @@ class _TransactionsPageState extends State<TransactionsPage> {
           end: DateTime(anchor.year, anchor.month + 1, 0),
         );
       case TransactionTimeFilter.week:
-        final start = anchor.subtract(Duration(days: anchor.weekday - 1));
-        return DateWindow(
-          start: start,
-          end: start.add(const Duration(days: 6)),
-        );
+        final start = addCalendarDays(anchor, -(anchor.weekday - 1));
+        return DateWindow(start: start, end: addCalendarDays(start, 6));
       case TransactionTimeFilter.last12Months:
         return DateWindow(
           start: DateTime(anchor.year, anchor.month - 11),
           end: DateTime(anchor.year, anchor.month + 1, 0),
         );
       case TransactionTimeFilter.last30Days:
-        return DateWindow(
-          start: anchor.subtract(const Duration(days: 29)),
-          end: anchor,
-        );
+        return DateWindow(start: addCalendarDays(anchor, -29), end: anchor);
       case TransactionTimeFilter.last6Weeks:
-        final weekEnd = anchor.add(Duration(days: 7 - anchor.weekday));
-        return DateWindow(
-          start: weekEnd.subtract(const Duration(days: 41)),
-          end: weekEnd,
-        );
+        final weekEnd = addCalendarDays(anchor, 7 - anchor.weekday);
+        return DateWindow(start: addCalendarDays(weekEnd, -41), end: weekEnd);
     }
   }
 
@@ -1014,16 +1007,16 @@ class _TransactionsPageState extends State<TransactionsPage> {
             _periodAnchor.month + direction,
           );
         case TransactionTimeFilter.week:
-          _periodAnchor = _periodAnchor.add(Duration(days: direction * 7));
+          _periodAnchor = addCalendarDays(_periodAnchor, direction * 7);
         case TransactionTimeFilter.last12Months:
           _periodAnchor = DateTime(
             _periodAnchor.year,
             _periodAnchor.month + direction * 12,
           );
         case TransactionTimeFilter.last30Days:
-          _periodAnchor = _periodAnchor.add(Duration(days: direction * 30));
+          _periodAnchor = addCalendarDays(_periodAnchor, direction * 30);
         case TransactionTimeFilter.last6Weeks:
-          _periodAnchor = _periodAnchor.add(Duration(days: direction * 42));
+          _periodAnchor = addCalendarDays(_periodAnchor, direction * 42);
       }
     });
   }

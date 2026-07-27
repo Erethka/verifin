@@ -374,15 +374,9 @@ DateWindow? _window(
         end: DateTime(now.year - 1, 12, 31),
       );
     case 'last7Days':
-      return DateWindow(
-        start: dateOnly(now).subtract(const Duration(days: 6)),
-        end: now,
-      );
+      return DateWindow(start: addCalendarDays(dateOnly(now), -6), end: now);
     case 'last30Days':
-      return DateWindow(
-        start: dateOnly(now).subtract(const Duration(days: 29)),
-        end: now,
-      );
+      return DateWindow(start: addCalendarDays(dateOnly(now), -29), end: now);
     case 'last3Months':
       return DateWindow(start: DateTime(now.year, now.month - 2), end: now);
     case 'last6Months':

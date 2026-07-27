@@ -307,10 +307,7 @@ List<DateEntryGroup> groupEntriesByDate(List<LedgerEntry> entries) {
 
 /// 相对今天的日期说明（今天 / 昨天，其余为空）。
 String relativeDay(AppLocalizations l10n, DateTime date) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final target = DateTime(date.year, date.month, date.day);
-  final diff = today.difference(target).inDays;
+  final diff = calendarDaysBetween(date, DateTime.now());
   if (diff == 0) {
     return l10n.todayLabel;
   }

@@ -204,9 +204,12 @@ class NotificationScheduler {
   }
 
   /// 计算下一次 hour:minute 的本地时区时刻（今天已过则顺延到明天）。
+  ///
+  /// 顺延按「日历日 +1」构造而非 `add(Duration(days: 1))`——[tz.TZDateTime] 的
+  /// 加法同样是绝对 24 小时，跨夏令时切换会把提醒推到次日的 hour±1。
   tz.TZDateTime _nextInstanceOf(int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(
+    final scheduled = tz.TZDateTime(
       tz.local,
       now.year,
       now.month,
@@ -214,9 +217,16 @@ class NotificationScheduler {
       hour,
       minute,
     );
-    if (!scheduled.isAfter(now)) {
-      scheduled = scheduled.add(const Duration(days: 1));
+    if (scheduled.isAfter(now)) {
+      return scheduled;
     }
-    return scheduled;
+    return tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day + 1,
+      hour,
+      minute,
+    );
   }
 }
