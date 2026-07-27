@@ -94,8 +94,13 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
   bool _applyingSuggestion = false;
   bool _didInitialSuggest = false;
   // 草稿编辑模式（导入预览）与 AI 草稿一样关闭自动识别，尊重传入数据。
-  late final bool _autoSuggestEnabled =
+  late final bool _draftFree =
       widget.initialDraft == null && widget.draftEntry == null;
+
+  /// 自动识别是否生效：非草稿模式，且用户没在设置里关掉总开关
+  /// （`controller.autoSuggestEnabled`，全局偏好、进备份）。
+  bool get _autoSuggestEnabled =>
+      _draftFree && VeriFinScope.of(context).autoSuggestEnabled;
 
   bool get _isDraft => widget.draftEntry != null;
 
@@ -169,7 +174,9 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
   }
 
   void _onNoteChanged() {
-    if (!_autoSuggestEnabled || _applyingSuggestion || !mounted) {
+    // 先看哨兵/挂载：initState 里程序化写备注也会触发本监听，那时不能查
+    // InheritedWidget（_autoSuggestEnabled 要读 controller）。
+    if (_applyingSuggestion || !mounted || !_autoSuggestEnabled) {
       return;
     }
     // 用户真的在输备注：标记已改（不再回填备注），并按新备注重算类型/分类/标签。
@@ -179,7 +186,7 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
 
   /// 按当前金额/备注/时段从历史识别，并填充「用户尚未改过」的字段。
   void _recomputeSuggestion() {
-    if (!_autoSuggestEnabled || !mounted) {
+    if (!mounted || !_autoSuggestEnabled) {
       return;
     }
     final controller = VeriFinScope.of(context);

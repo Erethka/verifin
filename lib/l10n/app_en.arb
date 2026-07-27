@@ -838,6 +838,14 @@
   "@amountTwoDecimalsDesc": {
     "description": "Subtitle explaining the two-decimals toggle"
   },
+  "autoSuggestLabel": "Auto-fill from history",
+  "@autoSuggestLabel": {
+    "description": "Settings toggle: auto-fill new entries from history"
+  },
+  "autoSuggestDesc": "Fill in type, category, tags and note for a new entry based on your past entries",
+  "@autoSuggestDesc": {
+    "description": "Subtitle explaining the auto-suggest toggle"
+  },
   "appLockLabel": "App lock",
   "enabledLabel": "On",
   "checkUpdate": "Check for updates",

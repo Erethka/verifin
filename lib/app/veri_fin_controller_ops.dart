@@ -562,15 +562,29 @@ mixin _ControllerOps on ChangeNotifier, _ControllerState {
     }
   }
 
-  /// 是否强制所有金额展示两位小数（`12` → `12.00`）。设备本地偏好，不进 JSON 备份、
-  /// 初始化保留。经顶层量 [amountForceTwoDecimals] 让无 context 的金额格式化纯函数
-  /// （小组件、通知、`series_math` 等）同步生效。
+  /// 是否强制所有金额展示两位小数（`12` → `12.00`）。全局显示偏好（不分账本），
+  /// 进 JSON 备份、初始化保留。经顶层量 [amountForceTwoDecimals] 让无 context 的金额
+  /// 格式化纯函数（小组件、通知、`series_math` 等）同步生效。
   bool get amountForceTwoDecimals => _amountForceTwoDecimals;
 
   void setAmountForceTwoDecimals(bool value) {
     _amountForceTwoDecimals = value;
     amount_format.amountForceTwoDecimals = value;
     _store.write(_amountFormatKey, value.toString());
+    notifyListeners();
+  }
+
+  /// 记账自动识别（`category_suggest.dart` 的 `suggestEntry`）总开关：关闭后手动记账
+  /// 页不再按历史自动填充类型/分类/标签/备注。全局偏好（不分账本），**默认开**，
+  /// 进 JSON 备份、初始化保留。AI 草稿与导入草稿本就不走自动识别，不受此开关影响。
+  bool get autoSuggestEnabled => _autoSuggestEnabled;
+
+  void setAutoSuggestEnabled(bool value) {
+    if (_autoSuggestEnabled == value) {
+      return;
+    }
+    _autoSuggestEnabled = value;
+    _store.write(_autoSuggestKey, value.toString());
     notifyListeners();
   }
 
@@ -2019,6 +2033,7 @@ mixin _ControllerOps on ChangeNotifier, _ControllerState {
         'defaultAccountIds': Map<String, String>.from(_defaultAccountIds),
         'fabActionMode': _fabActionMode.name,
         'amountForceTwoDecimals': _amountForceTwoDecimals,
+        'autoSuggestEnabled': _autoSuggestEnabled,
         'homeTrendConfig': _homeTrendConfig.toJson(),
       },
     };
@@ -2167,6 +2182,8 @@ mixin _ControllerOps on ChangeNotifier, _ControllerState {
     );
     final nextAmountForceTwoDecimals =
         data['amountForceTwoDecimals'] as bool? ?? false;
+    // 旧备份没有这个键：按「功能一直是开着的」还原，不因恢复备份而静默关掉。
+    final nextAutoSuggestEnabled = data['autoSuggestEnabled'] as bool? ?? true;
     final homeTrendValue = data['homeTrendConfig'];
     final nextHomeTrendConfig = homeTrendValue is Map
         ? HomeTrendConfig.fromJson(Map<String, dynamic>.from(homeTrendValue))
@@ -2232,6 +2249,7 @@ mixin _ControllerOps on ChangeNotifier, _ControllerState {
     _fabActionMode = nextFabActionMode;
     _amountForceTwoDecimals = nextAmountForceTwoDecimals;
     amount_format.amountForceTwoDecimals = nextAmountForceTwoDecimals;
+    _autoSuggestEnabled = nextAutoSuggestEnabled;
     _homeTrendConfig = nextHomeTrendConfig;
 
     // 备份恢复零参照完整性校验，是「幽灵同名分类」的唯一现实入口（内部不一致的外部/
@@ -2255,6 +2273,7 @@ mixin _ControllerOps on ChangeNotifier, _ControllerState {
     _persistBudgetCycleStartDays();
     _store.write(_fabActionKey, _fabActionMode.name);
     _store.write(_amountFormatKey, _amountForceTwoDecimals.toString());
+    _store.write(_autoSuggestKey, _autoSuggestEnabled.toString());
     _store.write(_homeTrendKey, _homeTrendConfig.encode());
     if (_assetCoverUrl.isEmpty) {
       _store.delete(_assetCoverKey);

@@ -109,6 +109,7 @@ mixin _ControllerState on ChangeNotifier {
   FabActionMode _fabActionMode = FabActionMode.manual;
   HomeTrendConfig _homeTrendConfig = HomeTrendConfig.defaults;
   bool _amountForceTwoDecimals = false;
+  bool _autoSuggestEnabled = true;
   AiSettings _aiSettings = const AiSettings();
 
   /// AI 对话查询的聊天记录：每条 `{role, content, displays?}`——助手消息可带序列化的
@@ -197,6 +198,8 @@ mixin _ControllerState on ChangeNotifier {
     _loadBudgetCycleStartDays();
     _amountForceTwoDecimals = _store.read(_amountFormatKey) == 'true';
     amount_format.amountForceTwoDecimals = _amountForceTwoDecimals;
+    // 默认开启：老用户升级后行为不变，只有显式关过才为 false。
+    _autoSuggestEnabled = _store.read(_autoSuggestKey) != 'false';
     _aiSettings = AiSettings.decode(_store.read(_aiSettingsKey));
     _aiChatHistory = _decodeChatHistory(_store.read(_aiChatHistoryKey));
     _homeTrendConfig = HomeTrendConfig.decode(_store.read(_homeTrendKey));

@@ -4298,6 +4298,18 @@ abstract class AppLocalizations {
   /// **'开启后金额始终显示两位小数（如 12 显示为 12.00）'**
   String get amountTwoDecimalsDesc;
 
+  /// Settings toggle: auto-fill new entries from history
+  ///
+  /// In zh, this message translates to:
+  /// **'自动识别'**
+  String get autoSuggestLabel;
+
+  /// Subtitle explaining the auto-suggest toggle
+  ///
+  /// In zh, this message translates to:
+  /// **'记一笔时根据历史记账习惯，自动填写类型、分类、标签和备注'**
+  String get autoSuggestDesc;
+
   /// No description provided for @appLockLabel.
   ///
   /// In zh, this message translates to:

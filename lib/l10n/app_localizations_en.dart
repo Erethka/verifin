@@ -2373,6 +2373,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Always show amounts with two decimals (e.g. 12 becomes 12.00)';
 
   @override
+  String get autoSuggestLabel => 'Auto-fill from history';
+
+  @override
+  String get autoSuggestDesc =>
+      'Fill in type, category, tags and note for a new entry based on your past entries';
+
+  @override
   String get appLockLabel => 'App lock';
 
   @override

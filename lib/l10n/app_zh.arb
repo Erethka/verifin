@@ -1589,6 +1589,14 @@
   "@amountTwoDecimalsDesc": {
     "description": "Subtitle explaining the two-decimals toggle"
   },
+  "autoSuggestLabel": "自动识别",
+  "@autoSuggestLabel": {
+    "description": "Settings toggle: auto-fill new entries from history"
+  },
+  "autoSuggestDesc": "记一笔时根据历史记账习惯，自动填写类型、分类、标签和备注",
+  "@autoSuggestDesc": {
+    "description": "Subtitle explaining the auto-suggest toggle"
+  },
   "appLockLabel": "应用锁",
   "enabledLabel": "已开启",
   "checkUpdate": "检查更新",

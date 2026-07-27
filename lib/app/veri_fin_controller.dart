@@ -73,6 +73,7 @@ const String _fabActionKey = 'verifin.fab_action.v1';
 const String _defaultAccountKey = 'verifin.default_account.v1';
 const String _budgetCycleKey = 'verifin.budget_cycle.v1';
 const String _amountFormatKey = 'verifin.amount_format.v1';
+const String _autoSuggestKey = 'verifin.auto_suggest.v1';
 const String _aiSettingsKey = 'verifin.ai.v1';
 const String _aiChatHistoryKey = 'verifin.ai_chat.v1';
 const String _homeTrendKey = 'verifin.home_metrics.v1';

@@ -2335,6 +2335,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get amountTwoDecimalsDesc => '开启后金额始终显示两位小数（如 12 显示为 12.00）';
 
   @override
+  String get autoSuggestLabel => '自动识别';
+
+  @override
+  String get autoSuggestDesc => '记一笔时根据历史记账习惯，自动填写类型、分类、标签和备注';
+
+  @override
   String get appLockLabel => '应用锁';
 
   @override

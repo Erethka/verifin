@@ -124,6 +124,18 @@ class SettingsPage extends StatelessWidget {
                       onTap: () => _pickDefaultAccount(context, controller),
                     ),
                     const Divider(height: 1),
+                    CompactSwitchRow(
+                      icon: Icons.auto_fix_high_outlined,
+                      title: Text(
+                        AppLocalizations.of(context).autoSuggestLabel,
+                      ),
+                      subtitle: Text(
+                        AppLocalizations.of(context).autoSuggestDesc,
+                      ),
+                      value: controller.autoSuggestEnabled,
+                      onChanged: controller.setAutoSuggestEnabled,
+                    ),
+                    const Divider(height: 1),
                     SettingsRow(
                       icon: Icons.auto_awesome_outlined,
                       title: AppLocalizations.of(context).aiSettingsTitle,

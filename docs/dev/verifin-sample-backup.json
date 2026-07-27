@@ -775,6 +775,7 @@
     },
     "fabActionMode": "manualTapAiLongPress",
     "amountForceTwoDecimals": true,
+    "autoSuggestEnabled": false,
     "homeTrendConfig": {
       "title": "本月概览",
       "big": "monthExpense",

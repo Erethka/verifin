@@ -104,4 +104,54 @@ void main() {
     );
     expect(note.controller?.text, '利息');
   });
+
+  testWidgets('auto-suggest fills nothing once the setting is turned off', (
+    tester,
+  ) async {
+    final store = LocalKeyValueStore();
+    final controller = await makeController(store);
+    // 默认开启：老用户升级后行为不变。
+    expect(controller.autoSuggestEnabled, isTrue);
+    final bookId = controller.activeBook.id;
+    // 与上一个用例同样的历史（88 元 → 收入·利息·备注「利息」）。
+    for (var i = 0; i < 2; i++) {
+      controller.addEntry(
+        LedgerEntry(
+          id: 'inc-$i',
+          bookId: bookId,
+          type: EntryType.income,
+          amount: 88,
+          categoryId: 'interest',
+          accountId: '',
+          note: '利息',
+          occurredAt: DateTime(2026, 7, i + 1, 9),
+        ),
+      );
+    }
+    controller.setAutoSuggestEnabled(false);
+    expect(store.read('verifin.auto_suggest.v1'), 'false');
+
+    await pumpApp(tester, store);
+    await tapBottomTab(tester, 0);
+
+    await tester.tap(find.byKey(const Key('quick_entry_fab')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('number_key_8')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('number_key_8')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('number_pad_ok')));
+    await tester.pumpAndSettle();
+
+    // 关掉后一切保持默认：类型仍是支出，备注仍为空。
+    final segmented = tester.widget<SegmentedButton<EntryType>>(
+      find.byKey(const Key('entry_type_segmented_button')),
+    );
+    expect(segmented.selected, <EntryType>{EntryType.expense});
+    final note = tester.widget<TextField>(
+      find.byKey(const Key('entry_note_field')),
+    );
+    expect(note.controller?.text, isEmpty);
+    expect(find.widgetWithText(ChoiceChip, '利息'), findsNothing);
+  });
 }

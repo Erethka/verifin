@@ -136,6 +136,7 @@ void main() {
       ..setDefaultAccountId('cash-test')
       ..setFabActionMode(FabActionMode.ai)
       ..setAmountForceTwoDecimals(true)
+      ..setAutoSuggestEnabled(false)
       ..setHomeTrendConfig(
         HomeTrendConfig.defaults.copyWith(
           title: '概览测试',
@@ -159,10 +160,12 @@ void main() {
     expect(target.categoryBudget(DateTime(2026, 7), 'dining'), 600);
     expect(target.themePreference, ThemePreference.dark);
     expect(target.hapticsEnabled, isFalse);
-    // 设备偏好也随备份还原：默认账户、记一笔按钮行为、金额两位小数、首页指标配置。
+    // 设备偏好也随备份还原：默认账户、记一笔按钮行为、金额两位小数、自动识别开关、
+    // 首页指标配置。
     expect(target.defaultAccountId, 'cash-test');
     expect(target.fabActionMode, FabActionMode.ai);
     expect(target.amountForceTwoDecimals, isTrue);
+    expect(target.autoSuggestEnabled, isFalse);
     expect(target.homeTrendConfig.title, '概览测试');
     expect(target.homeTrendConfig.series, HomeTrendSeries.income);
     expect(target.categories.any((category) => category.label == '咖啡'), isTrue);
@@ -246,10 +249,12 @@ void main() {
     expect(controller.attachmentCountForEntry('entry_20260703_001'), 1);
     // 周期记账：样例含每月房租规则，导入后应能读回。
     expect(controller.recurringRules.map((r) => r.note), contains('房租'));
-    // 设备偏好：样例含默认账户、记一笔按钮行为、金额两位小数、首页指标配置，导入后应读回。
+    // 设备偏好：样例含默认账户、记一笔按钮行为、金额两位小数、自动识别开关、首页指标
+    // 配置，导入后应读回。
     expect(controller.defaultAccountId, 'acc_alipay');
     expect(controller.fabActionMode, FabActionMode.manualTapAiLongPress);
     expect(controller.amountForceTwoDecimals, isTrue);
+    expect(controller.autoSuggestEnabled, isFalse);
     expect(controller.homeTrendConfig.title, '本月概览');
     expect(controller.homeTrendConfig.series, HomeTrendSeries.net);
     // 转账手续费：样例转账带 fee，导入后应保留。
