@@ -154,4 +154,66 @@ void main() {
     expect(note.controller?.text, isEmpty);
     expect(find.widgetWithText(ChoiceChip, '利息'), findsNothing);
   });
+
+  // issue #26：历史里有金额相近的退款条目时，记账页此前会被自动识别翻成「退款」
+  // 类型，而退款没有任何分类，`categories.first` 抛 Bad state: No element → 白屏。
+  testWidgets('refund history does not blank out the entry page', (
+    tester,
+  ) async {
+    final store = LocalKeyValueStore();
+    final controller = await makeController(store);
+    final bookId = controller.activeBook.id;
+    // 一笔原支出 + 两笔挂在它上面的小额退款（小额退款是常见真实场景）。
+    controller.addEntry(
+      LedgerEntry(
+        id: 'exp-1',
+        bookId: bookId,
+        type: EntryType.expense,
+        amount: 30,
+        categoryId: 'dining',
+        accountId: '',
+        note: '外卖',
+        occurredAt: DateTime(2026, 7, 20, 12),
+      ),
+    );
+    for (var i = 0; i < 2; i++) {
+      controller.addEntry(
+        LedgerEntry(
+          id: 'refund-$i',
+          bookId: bookId,
+          type: EntryType.refund,
+          amount: 5,
+          categoryId: '',
+          accountId: '',
+          note: '退款到账',
+          refundOf: 'exp-1',
+          settledAt: DateTime(2026, 7, 21 + i, 12),
+          occurredAt: DateTime(2026, 7, 21 + i, 12),
+        ),
+      );
+    }
+
+    await pumpApp(tester, store);
+    await tapBottomTab(tester, 0);
+
+    // 输入与退款金额精确相同的 5 进入记账页。
+    await tester.tap(find.byKey(const Key('quick_entry_fab')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('number_key_5')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('number_pad_ok')));
+    await tester.pumpAndSettle();
+
+    // 页面正常渲染（不白屏），且类型没被翻成退款。
+    expect(tester.takeException(), isNull);
+    final segmented = tester.widget<SegmentedButton<EntryType>>(
+      find.byKey(const Key('entry_type_segmented_button')),
+    );
+    expect(segmented.selected, <EntryType>{EntryType.expense});
+    // 退款条目的备注也不该被带出。
+    final noteField = tester.widget<TextField>(
+      find.byKey(const Key('entry_note_field')),
+    );
+    expect(noteField.controller?.text, isEmpty);
+  });
 }

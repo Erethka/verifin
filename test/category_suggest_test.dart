@@ -126,5 +126,89 @@ void main() {
       expect(s.type, EntryType.expense);
       expect(s.categoryId, 'dining');
     });
+
+    // issue #26：退款条目也在 `controller.entries` 里，此前会被投票成主导类型，
+    // 记账页随即拿不到退款分类而崩溃白屏。退款历史必须整条不参与识别。
+    test('refund history never drives the suggestion', () {
+      final history = <LedgerEntry>[
+        _e(
+          type: EntryType.refund,
+          categoryId: '',
+          note: '退款到账',
+          amount: 4.85,
+          tagIds: <String>['tag-refund'],
+        ),
+        _e(
+          type: EntryType.refund,
+          categoryId: '',
+          note: '退款到账',
+          amount: 4.9,
+          tagIds: <String>['tag-refund'],
+        ),
+      ];
+      final s = _suggest(history: history, amount: 4.85);
+      expect(s.type, isNull);
+      // 备注/标签同样不该从退款条目带出。
+      expect(s.note, isNull);
+      expect(s.tagIds, isNull);
+      expect(s.isEmpty, isTrue);
+    });
+
+    test('refund history does not outvote matching expense history', () {
+      final history = <LedgerEntry>[
+        _e(type: EntryType.refund, categoryId: '', note: '退款', amount: 4.85),
+        _e(type: EntryType.refund, categoryId: '', note: '退款', amount: 4.85),
+        _e(type: EntryType.refund, categoryId: '', note: '退款', amount: 4.85),
+        _e(
+          type: EntryType.expense,
+          categoryId: 'coffee',
+          note: '',
+          amount: 4.85,
+        ),
+        _e(
+          type: EntryType.expense,
+          categoryId: 'coffee',
+          note: '',
+          amount: 4.85,
+        ),
+      ];
+      // 退款笔数更多，但只有支出参与投票。
+      final s = _suggest(history: history, amount: 4.85);
+      expect(s.type, EntryType.expense);
+      expect(s.categoryId, 'coffee');
+    });
+
+    // 转账不计入收支统计，仅凭金额接近就自动翻成转账错得隐蔽（金额从统计里消失）。
+    test('transfer history is not auto-inferred as the type', () {
+      final history = <LedgerEntry>[
+        _e(type: EntryType.transfer, categoryId: '', note: '还信用卡', amount: 200),
+        _e(type: EntryType.transfer, categoryId: '', note: '还信用卡', amount: 200),
+      ];
+      final s = _suggest(history: history, amount: 200);
+      expect(s.type, isNull);
+      expect(s.isEmpty, isTrue);
+    });
+
+    test('forcedType transfer still learns within transfer history', () {
+      final history = <LedgerEntry>[
+        _e(
+          type: EntryType.transfer,
+          categoryId: '',
+          note: '还信用卡',
+          amount: 200,
+          tagIds: <String>['tag-card'],
+        ),
+        _e(type: EntryType.transfer, categoryId: '', note: '还信用卡', amount: 200),
+      ];
+      // 用户手动选了转账：仍在转账内带出备注/标签（不受自动推断白名单限制）。
+      final s = _suggest(
+        history: history,
+        amount: 200,
+        forcedType: EntryType.transfer,
+      );
+      expect(s.type, EntryType.transfer);
+      expect(s.note, '还信用卡');
+      expect(s.tagIds, <String>['tag-card']);
+    });
   });
 }

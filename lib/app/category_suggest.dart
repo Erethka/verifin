@@ -12,6 +12,8 @@ import 'models.dart';
 ///
 /// 取相关度达标的历史集合，按相关度加权投票出主导类型与分类，并从相关度最高的那笔
 /// （样本）带出标签与备注。无把握则各字段留空——宁可不猜。
+///
+/// 自行推断出的类型只可能是支出或收入（见 [_kAutoInferableTypes]）。
 class EntrySuggestion {
   const EntrySuggestion({this.type, this.categoryId, this.tagIds, this.note});
 
@@ -63,6 +65,21 @@ const double _kCategoryShare = 0.5;
 /// 只回看最近这么多笔历史，兼顾性能与近期习惯。
 const int _kMaxHistory = 500;
 
+/// 允许**自行推断**出的交易类型（用户未手动选定类型时）。
+///
+/// 刻意窄于 [EntryType.userSelectable]：
+/// - [EntryType.refund] 压根不是可选类型（退款只能从「原支出 → 添加退款」创建），
+///   记账页也没有退款分类——推断出它会让记账页拿不到任何分类而崩溃白屏（issue #26）；
+/// - [EntryType.transfer] 虽可手动选，但转账不计入收支统计、还需转入账户，
+///   仅凭金额接近就把一笔账悄悄翻成转账，错得隐蔽（金额直接从统计里消失）。
+///
+/// 用户**手动选定**类型后（`forcedType` 非空，其值必属 [EntryType.userSelectable]）
+/// 不受此限制：那时只在该类型内识别分类/标签/备注，不再翻转类型。
+const Set<EntryType> _kAutoInferableTypes = <EntryType>{
+  EntryType.expense,
+  EntryType.income,
+};
+
 class _Scored {
   const _Scored(this.entry, this.relevance, this.strong);
   final LedgerEntry entry;
@@ -89,7 +106,9 @@ EntrySuggestion suggestEntry({
   final noteTokens = _tokenize(note);
 
   // 只保留「金额或备注真的沾边」的历史，时段仅作微弱加权。
-  // forcedType 非空时（用户已手动选定类型）只看该类型的历史，不再翻转类型。
+  // forcedType 非空时（用户已手动选定类型）只看该类型的历史，不再翻转类型；
+  // 否则只从可自行推断的类型里学习（见 [_kAutoInferableTypes]）——退款/转账条目
+  // 整条排除，既不参与类型投票，其备注/标签也不会被当样本带出。
   final relevant = <_Scored>[];
   var scanned = 0;
   for (final entry in history) {
@@ -97,7 +116,9 @@ EntrySuggestion suggestEntry({
       break;
     }
     scanned++;
-    if (forcedType != null && entry.type != forcedType) {
+    if (forcedType != null
+        ? entry.type != forcedType
+        : !_kAutoInferableTypes.contains(entry.type)) {
       continue;
     }
     final noteSim = noteTokens.isEmpty
@@ -160,8 +181,10 @@ EntrySuggestion suggestEntry({
   final candidateIds = switch (type) {
     EntryType.income => incomeCategoryIds,
     EntryType.expense => expenseCategoryIds,
+    // 转账只在用户手动选定后才会走到这里，且不自动识别分类。
     EntryType.transfer => const <String>{},
-    // 退款条目不作记账自动识别的候选（其分类沿用原支出）。
+    // 退款不可达：既非可选类型，扫描阶段也已整条排除（见 [_kAutoInferableTypes]），
+    // 此分支仅为 switch 穷尽。
     EntryType.refund => const <String>{},
   };
 

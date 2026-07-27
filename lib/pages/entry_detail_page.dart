@@ -266,6 +266,12 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
   @override
   Widget build(BuildContext context) {
     final controller = VeriFinScope.of(context);
+    // 本页只能表达用户可选的类型：退款不在此选择（只能从「原支出 → 添加退款」创建），
+    // 且没有退款分类。任何来路（自动识别、草稿）带进来的非可选类型都归一化回支出，
+    // 否则下方分类列表为空、类型选择器也会选不中任何一段（issue #26）。
+    if (!EntryType.userSelectable.contains(_type)) {
+      _type = EntryType.expense;
+    }
     // 草稿模式下把临时账户（未落库，如导入将新建的）并入可选列表。
     final baseAccounts = _isDraft
         ? <Account>[...controller.accounts, ...widget.draftExtraAccounts!]
@@ -284,7 +290,11 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
     _normalizeTransferAccounts(accounts);
     final categories = _categoriesForType(controller, _type);
     if (!categories.any((category) => category.id == _categoryId)) {
-      _categoryId = categories.first.id;
+      // 兜底而非 `categories.first`：某类型一个分类都没有时，宁可先留空（保存前
+      // 由用户选，最坏也只是一条无分类交易）也不能让整页 build 抛异常白屏。
+      // 上面的类型归一化 + 「不许删光某类型最后一个分类」的保护已让空列表不可达，
+      // 这里只是最后一道防线。
+      _categoryId = categories.isEmpty ? '' : categories.first.id;
     }
     // 分类快捷区：顶级分类作 chip，点有子分类的会就地展开子分类面板。
     final rootCategoriesForType = categories
@@ -342,10 +352,9 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                       setState(() {
                         _type = selection.first;
                         _typeTouched = true;
-                        _categoryId = _categoriesForType(
-                          controller,
-                          _type,
-                        ).first.id;
+                        // 同上：空列表时留空，不取 `.first` 以免抛异常白屏。
+                        final next = _categoriesForType(controller, _type);
+                        _categoryId = next.isEmpty ? '' : next.first.id;
                         _normalizeTransferAccounts(accounts);
                       });
                       // 用户改了类型后，在该类型内重新识别分类/标签/备注。
