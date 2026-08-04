@@ -123,23 +123,23 @@ Future<void> startScreenshotEntry(
     }
   }
 
-  final draft = await _runCaptureParse(context, () async {
+  final drafts = await _runCaptureParse(context, () async {
     final ocrText = sharedImageBytes != null
         ? await recognizeTextFromBytes(sharedImageBytes)
         : await recognizeTextFromPath(imagePath!);
     if (ocrText.trim().isEmpty) {
       throw _CaptureNoTextException();
     }
-    return requestCapturedEntryDraft(
+    return requestCapturedEntryDrafts(
       settings: controller.aiSettings,
       capturedText: ocrText,
       context: buildAiEntryContext(controller),
     );
   });
-  if (draft == null || !context.mounted) {
+  if (drafts == null || drafts.isEmpty || !context.mounted) {
     return;
   }
-  await _confirmDraft(context, controller, draft);
+  await _confirmDrafts(context, controller, drafts);
 }
 
 /// 外部采集文本记账：分享的账单文本或自动化意图送入的原文，AI 解析成草稿确认。
@@ -148,43 +148,50 @@ Future<void> startCapturedTextEntry(BuildContext context, String text) async {
     return;
   }
   final controller = VeriFinScope.of(context);
-  final draft = await _runCaptureParse(context, () {
-    return requestCapturedEntryDraft(
+  final drafts = await _runCaptureParse(context, () {
+    return requestCapturedEntryDrafts(
       settings: controller.aiSettings,
       capturedText: text,
       context: buildAiEntryContext(controller),
     );
   });
-  if (draft == null || !context.mounted) {
+  if (drafts == null || drafts.isEmpty || !context.mounted) {
     return;
   }
-  await _confirmDraft(context, controller, draft);
+  await _confirmDrafts(context, controller, drafts);
 }
 
-Future<void> _confirmDraft(
+/// 逐笔确认识别出的全部交易草稿：按顺序各弹一次记账页，用户点击保存（勾）后
+/// 继续弹下一笔；返回/取消则跳过当前这笔、同样继续下一笔，直到全部草稿处理完。
+Future<void> _confirmDrafts(
   BuildContext context,
   VeriFinController controller,
-  AiEntryDraft draft,
-) {
-  return Navigator.of(context).push<void>(
-    MaterialPageRoute<void>(
-      builder: (_) => EntryDetailPage(
-        initialAmount: draft.amount,
-        // 未识别到账户时，记账页回落到默认付款账户（未设则为「无账户」）。
-        initialAccountId: controller.defaultAccountId,
-        initialDraft: draft,
+  List<AiEntryDraft> drafts,
+) async {
+  for (final draft in drafts) {
+    if (!context.mounted) {
+      return;
+    }
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => EntryDetailPage(
+          initialAmount: draft.amount,
+          // 未识别到账户时，记账页回落到默认付款账户（未设则为「无账户」）。
+          initialAccountId: controller.defaultAccountId,
+          initialDraft: draft,
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// 内部信号：图片里没识别到任何文字（与「识别到文字但不是交易」区分提示）。
 class _CaptureNoTextException implements Exception {}
 
 /// 带模态加载态执行「识别 + 解析」，失败弹本地化错误提示，成功返回草稿。
-Future<AiEntryDraft?> _runCaptureParse(
+Future<List<AiEntryDraft>?> _runCaptureParse(
   BuildContext context,
-  Future<AiEntryDraft> Function() task,
+  Future<List<AiEntryDraft>> Function() task,
 ) async {
   final l10n = AppLocalizations.of(context);
   final rootNavigator = Navigator.of(context, rootNavigator: true);
@@ -213,10 +220,10 @@ Future<AiEntryDraft?> _runCaptureParse(
     ),
   );
 
-  AiEntryDraft? draft;
+  List<AiEntryDraft>? drafts;
   String? errorText;
   try {
-    draft = await task();
+    drafts = await task();
   } on _CaptureNoTextException {
     errorText = l10n.screenshotEntryNoText;
   } on AiEntryException catch (error) {
@@ -249,5 +256,5 @@ Future<AiEntryDraft?> _runCaptureParse(
       ),
     );
   }
-  return draft;
+  return drafts;
 }

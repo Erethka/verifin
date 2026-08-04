@@ -149,6 +149,44 @@ Map<String, Object?>? extractJsonObject(String content) {
   return null;
 }
 
+/// 从模型返回的文本中提取交易 JSON 列表：
+/// 1. 优先解析 `[...]` 数组（容忍 ```json 代码块与前后杂文）；
+/// 2. 其次解析 `{"transactions": [...]}` 信封（transactions 为数组或单个对象）；
+/// 3. 均不命中返回 null，由调用方回退到单笔解析。
+List<Map<String, Object?>>? extractJsonTransactionList(String content) {
+  final start = content.indexOf('[');
+  final end = content.lastIndexOf(']');
+  if (start >= 0 && end > start) {
+    final slice = content.substring(start, end + 1);
+    try {
+      final decoded = jsonDecode(slice);
+      if (decoded is List) {
+        return decoded
+            .whereType<Map>()
+            .map((item) => Map<String, Object?>.from(item))
+            .toList();
+      }
+    } catch (_) {
+      // 数组解析失败时继续尝试对象信封。
+    }
+  }
+  final envelope = extractJsonObject(content);
+  if (envelope == null) {
+    return null;
+  }
+  final raw = envelope['transactions'];
+  if (raw is List) {
+    return raw
+        .whereType<Map>()
+        .map((item) => Map<String, Object?>.from(item))
+        .toList();
+  }
+  if (raw is Map) {
+    return <Map<String, Object?>>[Map<String, Object?>.from(raw)];
+  }
+  return null;
+}
+
 /// 安全取字符串字段：模型可能把本应是字符串的字段返回成数字/布尔/数组，直接
 /// `as String?` 会抛 TypeError。非字符串一律回退空串（后续按「未识别」降级处理）。
 String _parseString(Object? raw) => raw is String ? raw.trim() : '';
@@ -230,12 +268,24 @@ AiEntryDraft parseAiEntryDraft(String content, AiEntryContext context) {
   if (json == null) {
     throw AiEntryException(AiEntryError.emptyResult);
   }
+  final draft = _parseSingleDraft(json, context);
+  if (draft == null) {
+    throw AiEntryException(AiEntryError.noAmount);
+  }
+  return draft;
+}
 
+/// 解析单个交易 JSON 为草稿；金额 <= 0（无交易）返回 null 不抛错。
+/// 批量场景跳过 null 条目，单笔 API 由 [parseAiEntryDraft] 转成 [AiEntryError.noAmount]。
+AiEntryDraft? _parseSingleDraft(
+  Map<String, Object?> json,
+  AiEntryContext context,
+) {
   final warnings = <AiDraftWarning>[];
   final type = _parseType(json['type']);
   final amount = _parseAmount(json['amount']);
   if (amount <= 0) {
-    throw AiEntryException(AiEntryError.noAmount);
+    return null;
   }
 
   final categories = type == EntryType.income
@@ -289,6 +339,33 @@ AiEntryDraft parseAiEntryDraft(String content, AiEntryContext context) {
   );
 }
 
+/// 批量解析采集文本中的多笔交易草稿：优先按 `[...]` 数组或 `{"transactions":[...]}`
+/// 信封解析全部交易（跳过无金额条目，截断到 [maxCapturedEntryDrafts]），
+/// 失败时回退到单笔对象。全部条目无金额或没有任何 JSON 时抛 [AiEntryException]。
+List<AiEntryDraft> parseAiEntryDrafts(
+  String content,
+  AiEntryContext context,
+) {
+  final items = extractJsonTransactionList(content);
+  if (items != null) {
+    final drafts = <AiEntryDraft>[];
+    for (final item in items) {
+      final draft = _parseSingleDraft(item, context);
+      if (draft != null) {
+        drafts.add(draft);
+        if (drafts.length >= maxCapturedEntryDrafts) {
+          break;
+        }
+      }
+    }
+    if (drafts.isEmpty) {
+      throw AiEntryException(AiEntryError.noAmount);
+    }
+    return drafts;
+  }
+  return <AiEntryDraft>[parseAiEntryDraft(content, context)];
+}
+
 /// 发起一次 AI 记账解析：请求 → 解析 → 校验，返回草稿。网络/解析异常抛 [AiException]。
 Future<AiEntryDraft> requestAiEntryDraft({
   required AiSettings settings,
@@ -307,6 +384,9 @@ Future<AiEntryDraft> requestAiEntryDraft({
 /// 无关内容，截断保护 Token 消耗（关键交易信息几乎总在前部）。
 const int capturedTextMaxLength = 4000;
 
+/// 一次采集识别最多返回的交易草稿数：防止月度长账单截图一次弹出过多确认页。
+const int maxCapturedEntryDrafts = 10;
+
 /// 采集文本（截图 OCR / 分享文本）的前置过滤：连一个数字都没有的文本不可能
 /// 含交易金额，直接短路不调 AI。
 bool capturedTextLikelyTransaction(String text) {
@@ -315,24 +395,30 @@ bool capturedTextLikelyTransaction(String text) {
 
 /// 构造「采集文本」解析的系统提示词：输入不是用户亲手打的一句话，而是账单截图
 /// 的 OCR 结果或分享/自动化工具送入的账单原文——可能换行、乱序、混着界面按钮和
-/// 余额等无关数字，须挑出最主要的一笔交易。
+/// 余额等无关数字，须解析出文本中包含的**每一笔**交易供逐笔确认。
 String buildCapturedEntryPrompt(AiEntryContext context) {
   final base = buildAiEntryPrompt(context);
   return '''
 $base
 
-补充：本次用户输入不是亲手描述的一句话，而是一段自动采集的账单文本（支付/账单页面截图的 OCR 结果，或分享进来的账单原文），可能包含换行、乱序、界面按钮文字等噪音。按下面规则从中解析出最主要的一笔交易：
+补充：本次用户输入不是亲手描述的一句话，而是一段自动采集的账单文本（支付/账单页面截图的 OCR 结果，或分享进来的账单原文），可能包含换行、乱序、界面按钮文字等噪音。请按下面规则**解析出文本中包含的每一笔交易**，输出格式以本补充为准（覆盖基础提示词里的单笔示例）：
 - 金额只取「交易金额/付款金额/收款金额」本身；余额、优惠、积分、红包、手续费上限等其他数字一律忽略。
 - 到账、收款、入账、退款、工资、报销 → "income"；付款、消费、支出、扣款 → "expense"；账户间转账、还款、提现 → "transfer"。
 - 文本里出现的交易时间（日期与时分）优先于当前时间，填入 date 与 time。
 - 对方名称/商户名/备注摘要放进 note，保留原语言。
-- 如果整段文本根本不含任何一笔交易（如聊天记录、营销内容、纯界面文字），把 amount 置为 0。
+- 同一笔交易只输出一次：列表与汇总里重复出现的同一笔不要重复输出。
+- 最多输出 $maxCapturedEntryDrafts 笔，按文本中出现顺序排列；每笔 amount 必须是大于 0 的金额，无法识别为交易的内容（聊天记录、营销文本、纯界面文字）不要放进列表。
+- 如果整段文本根本不含任何一笔交易，输出空数组。
+
+只输出一个 JSON 对象，格式如下：
+{"transactions":[{"type":"expense","amount":32,"categoryId":"transport","accountId":"","toAccountId":null,"note":"打车","date":"2026-07-07","time":null}]}
 ''';
 }
 
-/// 发起一次「采集文本」记账解析：预过滤 → 截断 → 请求 → 解析 → 校验，返回草稿。
+/// 发起一次「采集文本」记账解析：预过滤 → 截断 → 请求 → 批量解析 → 校验，
+/// 返回识别出的全部交易草稿（按文本出现顺序）。
 /// 文本无数字直接抛 [AiEntryException]（无金额），不浪费 AI 调用。
-Future<AiEntryDraft> requestCapturedEntryDraft({
+Future<List<AiEntryDraft>> requestCapturedEntryDrafts({
   required AiSettings settings,
   required String capturedText,
   required AiEntryContext context,
@@ -349,5 +435,5 @@ Future<AiEntryDraft> requestCapturedEntryDraft({
     systemPrompt: buildCapturedEntryPrompt(context),
     userPrompt: input,
   );
-  return parseAiEntryDraft(content, context);
+  return parseAiEntryDrafts(content, context);
 }

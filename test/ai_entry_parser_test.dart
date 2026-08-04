@@ -47,6 +47,127 @@ void main() {
     });
   });
 
+  group('extractJsonTransactionList', () {
+    test('extracts array wrapped in prose', () {
+      const content =
+          '好的，结果如下：\n```json\n[{"type":"expense","amount":12}]\n```\n谢谢';
+      final items = extractJsonTransactionList(content);
+      expect(items, isNotNull);
+      expect(items, hasLength(1));
+      expect(items!.single['amount'], 12);
+    });
+
+    test('extracts transactions envelope object', () {
+      const content =
+          '{"transactions":[{"type":"expense","amount":12},{"type":"income","amount":8}]}';
+      final items = extractJsonTransactionList(content);
+      expect(items, hasLength(2));
+      expect(items!.first['type'], 'expense');
+      expect(items.last['type'], 'income');
+    });
+
+    test('returns null for single object or no json', () {
+      expect(
+        extractJsonTransactionList('{"type":"expense","amount":12}'),
+        isNull,
+      );
+      expect(extractJsonTransactionList('no json here'), isNull);
+    });
+  });
+
+  group('parseAiEntryDrafts', () {
+    test('parses multiple transactions in order', () {
+      final drafts = parseAiEntryDrafts(
+        '[{"type":"expense","amount":32,"categoryId":"transport",'
+        '"accountId":"cash","note":"打车","date":"2026-07-04"},'
+        '{"type":"expense","amount":18,"categoryId":"dining",'
+        '"accountId":"cash","note":"早餐","date":"2026-07-04"}]',
+        _context(),
+      );
+      expect(drafts, hasLength(2));
+      expect(drafts[0].amount, 32);
+      expect(drafts[0].categoryId, 'transport');
+      expect(drafts[1].amount, 18);
+      expect(drafts[1].categoryId, 'dining');
+    });
+
+    test('parses transactions envelope object', () {
+      final drafts = parseAiEntryDrafts(
+        '{"transactions":['
+        '{"type":"income","amount":8000,"categoryId":"salary","accountId":"card"},'
+        '{"type":"expense","amount":10,"categoryId":"dining","accountId":"cash"}'
+        ']}',
+        _context(),
+      );
+      expect(drafts, hasLength(2));
+      expect(drafts[0].type, EntryType.income);
+      expect(drafts[1].type, EntryType.expense);
+    });
+
+    test('skips zero-amount items', () {
+      final drafts = parseAiEntryDrafts(
+        '[{"type":"expense","amount":0,"categoryId":"dining","accountId":"cash"},'
+        '{"type":"expense","amount":15,"categoryId":"dining","accountId":"cash"}]',
+        _context(),
+      );
+      expect(drafts, hasLength(1));
+      expect(drafts.single.amount, 15);
+    });
+
+    test('all zero-amount items throw noAmount', () {
+      expect(
+        () => parseAiEntryDrafts(
+          '[{"type":"expense","amount":0,"categoryId":"dining","accountId":"cash"},'
+          '{"type":"expense","amount":0,"categoryId":"dining","accountId":"cash"}]',
+          _context(),
+        ),
+        throwsA(
+          isA<AiEntryException>().having(
+            (e) => e.error,
+            'error',
+            AiEntryError.noAmount,
+          ),
+        ),
+      );
+    });
+
+    test('falls back to a single object draft', () {
+      final drafts = parseAiEntryDrafts(
+        '{"type":"expense","amount":32,"categoryId":"transport",'
+        '"accountId":"cash","note":"打车"}',
+        _context(),
+      );
+      expect(drafts, hasLength(1));
+      expect(drafts.single.amount, 32);
+    });
+
+    test('no json throws emptyResult', () {
+      expect(
+        () => parseAiEntryDrafts('抱歉我不明白', _context()),
+        throwsA(
+          isA<AiEntryException>().having(
+            (e) => e.error,
+            'error',
+            AiEntryError.emptyResult,
+          ),
+        ),
+      );
+    });
+
+    test('caps drafts at maxCapturedEntryDrafts', () {
+      final items = List.generate(
+        12,
+        (i) =>
+            '{"type":"expense","amount":${i + 1},"categoryId":"dining",'
+            '"accountId":"cash"}',
+      ).join(',');
+      final drafts = parseAiEntryDrafts('[$items]', _context());
+      expect(drafts, hasLength(maxCapturedEntryDrafts));
+      expect(drafts.first.amount, 1);
+      expect(drafts.last.amount, maxCapturedEntryDrafts.toDouble());
+    });
+  });
+
   group('parseAiEntryDraft', () {
     test('parses a valid expense with matched category and account', () {
       final draft = parseAiEntryDraft(

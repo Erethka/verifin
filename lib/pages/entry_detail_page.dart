@@ -868,7 +868,9 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
     for (final dataUrl in _pendingAttachments) {
       controller.addAttachment(entryId, dataUrl);
     }
-    Navigator.of(context).pop();
+    // 返回「已保存」结果：批量确认识别草稿时据此继续弹出下一笔；
+    // 单笔入口（快速记账/AI 对话记账等）忽略该结果，行为不变。
+    Navigator.of(context).pop(true);
   }
 }
 

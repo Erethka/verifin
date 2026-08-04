@@ -41,18 +41,19 @@ void main() {
       expect(prompt, contains('dining'));
       expect(prompt, contains('salary'));
       expect(prompt, contains('cash'));
-      // 采集文本专属规则：OCR 噪音、忽略余额类数字、交易时间优先、非交易置 0。
+      // 采集文本专属规则：OCR 噪音、忽略余额类数字、交易时间优先、批量输出全部交易。
       expect(prompt, contains('OCR'));
       expect(prompt, contains('余额'));
       expect(prompt, contains('交易时间'));
-      expect(prompt, contains('amount 置为 0'));
+      expect(prompt, contains('每一笔交易'));
+      expect(prompt, contains('transactions'));
     });
   });
 
-  group('requestCapturedEntryDraft 预过滤', () {
+  group('requestCapturedEntryDrafts 预过滤', () {
     test('无数字文本不调 AI 直接报无金额', () async {
       await expectLater(
-        requestCapturedEntryDraft(
+        requestCapturedEntryDrafts(
           // 未配置的设置：若预过滤失效走到网络层会抛别的异常，测试即失败。
           settings: const AiSettings(),
           capturedText: '今晚吃什么',
@@ -70,7 +71,7 @@ void main() {
 
     test('空白文本同样短路', () async {
       await expectLater(
-        requestCapturedEntryDraft(
+        requestCapturedEntryDrafts(
           settings: const AiSettings(),
           capturedText: '   \n ',
           context: _context(),
