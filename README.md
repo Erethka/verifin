@@ -11,8 +11,8 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/平台-Android-3DDC84?logo=android&logoColor=white)](#)
-[![Release](https://img.shields.io/github/v/release/LumiDesk/verifin?label=版本&color=346edb)](https://github.com/LumiDesk/verifin/releases)
-[![Downloads](https://img.shields.io/github/downloads/LumiDesk/verifin/total?label=下载&color=3498db)](https://github.com/LumiDesk/verifin/releases)
+[![Release](https://img.shields.io/github/v/release/Erethka/verifin?label=版本&color=346edb)](https://github.com/Erethka/verifin/releases)
+[![Downloads](https://img.shields.io/github/downloads/Erethka/verifin/total?label=下载&color=3498db)](https://github.com/Erethka/verifin/releases)
 [![License](https://img.shields.io/badge/许可证-GPL--3.0--or--later-blue)](LICENSE)
 [![爱发电](https://img.shields.io/badge/爱发电-赞助支持-946ce6?logo=buymeacoffee&logoColor=white)](https://afdian.com/a/talyra42)
 
@@ -96,12 +96,12 @@
 
 ## 🚀 快速开始
 
-**普通用户**：直接到 [Releases](https://github.com/LumiDesk/verifin/releases) 下载最新 APK 安装（Android 手机）。
+**普通用户**：直接到 [Releases](https://github.com/Erethka/verifin/releases) 下载最新 APK 安装（Android 手机）。
 
 **开发者**：
 
 ```bash
-git clone git@github.com:LumiDesk/verifin.git
+git clone git@github.com:Erethka/verifin.git
 cd verifin
 flutter pub get                      # 安装依赖（自动生成 l10n）
 flutter run -d <android-device-id>   # Android 模拟器或真机预览

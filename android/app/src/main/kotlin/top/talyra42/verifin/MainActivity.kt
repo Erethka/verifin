@@ -924,9 +924,9 @@ class MainActivity : FlutterFragmentActivity() {
         private const val REQUEST_WRITE_DOWNLOADS = 4301
         private const val REQUEST_PICK_BACKUP_DIR = 4302
         private const val RELEASE_API_URL =
-            "https://api.github.com/repos/LumiDesk/verifin/releases/latest"
+            "https://api.github.com/repos/Erethka/verifin/releases/latest"
         // 预发布检查用列表端点：/releases/latest 天然排除预发布，需拉列表自行筛选。
         private const val RELEASE_LIST_API_URL =
-            "https://api.github.com/repos/LumiDesk/verifin/releases?per_page=20"
+            "https://api.github.com/repos/Erethka/verifin/releases?per_page=20"
     }
 }
