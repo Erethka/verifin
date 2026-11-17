@@ -8,9 +8,11 @@ import '../app/legal_content.dart';
 import '../l10n/app_localizations.dart';
 import '../app/models.dart';
 import '../app/platform_bridge.dart';
+import '../app/muse_sync_bridge.dart';
 import '../app/veri_fin_controller.dart';
 import '../app/veri_fin_scope.dart';
 import 'ai_settings_page.dart';
+import 'muse_sync_settings_page.dart';
 import 'app_lock_page.dart';
 import 'legal_pages.dart';
 import 'reminder_settings_page.dart';
@@ -151,6 +153,22 @@ class SettingsPage extends StatelessWidget {
                         );
                       },
                     ),
+                    if (MuseSyncBridge.supported) ...[
+                      const Divider(height: 1),
+                      SettingsRow(
+                        icon: Icons.sync_outlined,
+                        title: AppLocalizations.of(context).museSyncTitle,
+                        trailing: controller.museSyncConfig.enabled
+                            ? AppLocalizations.of(context).enabledLabel
+                            : AppLocalizations.of(context).notEnabled,
+                        trailingIcon: Icons.chevron_right,
+                        onTap: () => Navigator.of(context).push<void>(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const MuseSyncSettingsPage(),
+                          ),
+                        ),
+                      ),
+                    ],
                     const Divider(height: 1),
                     SettingsRow(
                       icon: Icons.notifications_active_outlined,

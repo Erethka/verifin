@@ -1355,5 +1355,19 @@
     }
   },
   "budgetOverrideClear": "Clear this month's custom amount",
-  "budgetCycleNotSet": "Not set"
+  "budgetCycleNotSet": "Not set",
+  "museSyncBackground": "Sync runs when the app opens and approximately every 15 minutes in the Android background, subject to system scheduling. Payment methods go in notes. New bills use no account. Corrections retain the original ledger. Android Keystore encrypts the read credential separately from ledger backups. Reset disables sync.",
+  "museSyncBook": "Ledger for new bills",
+  "museSyncDescription": "Muse submits individual bills to your HTTPS service. VeriFin imports them and updates corrections using stable IDs.",
+  "museSyncDone": "Bill synchronization completed",
+  "museSyncEnabled": "Automatic sync",
+  "museSyncError": "Bill sync failed. Check the HTTPS address, read credential, ledger and network. A restored server database may require reconfiguration.",
+  "museSyncNow": "Save and sync now",
+  "museSyncSaved": "Sync settings saved",
+  "museSyncTitle": "Muse bill sync",
+  "museSyncToken": "Phone read credential",
+  "museSyncTokenHint": "Required initially. Leave blank to keep the saved credential.",
+  "museSyncUrl": "HTTPS server address",
+  "museSyncReload": "Reload server bills",
+  "museSyncReloadHint": "Read all server bills again. Matching IDs update existing entries. Remote bills deleted on this phone will be imported again. Use this after restoring a server backup."
 }

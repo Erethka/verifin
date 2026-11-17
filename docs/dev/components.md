@@ -11,6 +11,8 @@ Veri Fin 已有的**可复用 widget / 弹窗 helper / 对话框 / 纯函数**�
 
 ---
 
+Muse 账单同步的设置页为 `lib/pages/muse_sync_settings_page.dart`，复用 `VeriPage`、`VeriHeader`、`VeriCard`、`CompactSwitchRow`、`SettingsRow` 和 `showOptionSheet`。`museServerUri` 在 `lib/app/muse_sync_config.dart` 校验 HTTPS 服务地址。
+
 ## 族 1 — 布局脚手架 / 页面容器
 
 > **新建页面的标准骨架与头部对齐规则见 `docs/ui-guidelines.md`「顶部 Header 与页面骨架」**：`Scaffold > SafeArea > VeriPage > ListView(padding: fromLTRB(14,8,14,…))` + `VeriHeader`；`VeriHeader` 自身无横向内边距，头部缩进全靠外层 padding，带固定页脚的页面须单独给头部套 `Padding(fromLTRB(14,8,14,0))`。

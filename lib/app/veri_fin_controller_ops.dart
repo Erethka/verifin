@@ -1938,6 +1938,19 @@ mixin _ControllerOps on ChangeNotifier, _ControllerState {
   }
 
   void resetAllData() {
+    // Stop importing after an explicit reset. Keep the cursor for a later opt-in.
+    _museSyncConfig = _museSyncConfig.copyWith(enabled: false);
+    _store.write(_museSyncKey, _museSyncConfig.encode());
+    unawaited(
+      MuseSyncBridge.setEnabled(false).catchError((Object _) {
+        // Jobs re-check the disabled preference before making network requests.
+        // Startup retries cancellation if the platform call is unavailable now.
+        _logger?.warning(
+          'Could not cancel Muse background job',
+          source: 'muse_sync',
+        );
+      }),
+    );
     // 偏好类 KV 键清空；账目类数据在下方以默认状态写回 SQLite。
     for (final key in <String>[
       _themeKey,

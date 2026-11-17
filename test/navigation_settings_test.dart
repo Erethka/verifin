@@ -40,7 +40,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('VeriFin $appVersionLabel'), 120);
     expect(find.text('VeriFin $appVersionLabel'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('主题模式'));
+    await tester.scrollUntilVisible(find.text('主题模式'), -120);
     await tester.pumpAndSettle();
     await tester.tap(find.text('主题模式'));
     await tester.pumpAndSettle();

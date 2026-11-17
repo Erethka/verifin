@@ -1,0 +1,58 @@
+name: Android Preview
+
+on:
+  push:
+    branches:
+      - 'preview/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.9'
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze and test
+        run: |
+          flutter analyze
+          flutter test
+      - name: Configure independent preview application
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.gradle/init.d"
+          cat > "$HOME/.gradle/init.d/verifin-preview.gradle" <<'EOF'
+          allprojects {
+              plugins.withId('com.android.application') {
+                  androidComponents.finalizeDsl { androidDsl ->
+                      androidDsl.buildTypes.getByName('release').applicationIdSuffix = '.musepreview'
+                      androidDsl.buildTypes.getByName('release').versionNameSuffix = '-muse-preview'
+                  }
+              }
+          }
+          EOF
+          sed -i 's/android:label="VeriFin"/android:label="VeriFin Muse Preview"/' android/app/src/main/AndroidManifest.xml
+      - name: Build preview APK
+        run: flutter build apk --release --target-platform android-arm64 --flavor github --dart-define=SELF_UPDATE=false
+      - name: Prepare download
+        run: |
+          mkdir -p preview-artifacts
+          cp build/app/outputs/flutter-apk/app-github-release.apk preview-artifacts/VeriFin-Muse-Preview-arm64.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verifin-muse-preview-arm64
+          path: preview-artifacts/*.apk
+          retention-days: 14

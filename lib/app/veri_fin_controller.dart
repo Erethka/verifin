@@ -19,12 +19,17 @@ import 'amount_format.dart' as amount_format;
 import 'home_metrics.dart';
 import 'ledger_math.dart';
 import 'logging/app_logger.dart';
+import 'l10n_outside_context.dart';
 import 'models.dart';
+import 'muse_sync_bridge.dart';
+import 'muse_sync_client.dart';
+import 'muse_sync_config.dart';
 import 'recurring.dart';
 import 'reminder/reminder_settings.dart';
 
 part 'veri_fin_controller_state.dart';
 part 'veri_fin_controller_ops.dart';
+part 'veri_fin_controller_muse.dart';
 
 /// 导入校验用的已知备份数据键：`data` 里出现其一即认定为本应用备份（配合 `app`
 /// 标记）。用于拦截「格式合法却非本应用」的 JSON，避免其把数据静默覆盖为初始态。
@@ -74,6 +79,7 @@ const String _defaultAccountKey = 'verifin.default_account.v1';
 const String _budgetCycleKey = 'verifin.budget_cycle.v1';
 const String _amountFormatKey = 'verifin.amount_format.v1';
 const String _autoSuggestKey = 'verifin.auto_suggest.v1';
+const String _museSyncKey = 'verifin.muse_sync.v1';
 const String _aiSettingsKey = 'verifin.ai.v1';
 const String _aiChatHistoryKey = 'verifin.ai_chat.v1';
 const String _homeTrendKey = 'verifin.home_metrics.v1';
@@ -101,7 +107,7 @@ int _compareEntriesLatestFirst(LedgerEntry a, LedgerEntry b) {
 /// 由应用根组件注入，控制器本身不做文件 I/O，测试宿主保持为空。
 
 class VeriFinController extends ChangeNotifier
-    with _ControllerState, _ControllerOps {
+    with _ControllerState, _ControllerOps, _ControllerMuse {
   VeriFinController._(
     this._store,
     this._repository, {

@@ -28,6 +28,17 @@ import java.net.URL
 
 // local_auth 需要宿主是 FragmentActivity，故继承 FlutterFragmentActivity。
 class MainActivity : FlutterFragmentActivity() {
+    override fun provideFlutterEngine(context: android.content.Context): FlutterEngine =
+        LedgerRuntime.engine(context)
+
+    override fun shouldDestroyEngineWithHost(): Boolean = false
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        channel?.setMethodCallHandler(null)
+        channel = null
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
+
     private var channel: MethodChannel? = null
     private var pendingQuickEntryIntent = false
     private var pendingCaptureImageUri: Uri? = null

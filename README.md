@@ -6,7 +6,7 @@
 
 **完全免费 · 数据自主 · 本地优先的 Android 记账应用**
 
-你的每一笔账都只保存在你自己的手机里——没有服务器、没有账号、没有广告、不收集任何数据。
+账目默认保存在自己的手机里，可按需配置 AI、远程备份和自建 Muse 账单同步。
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
@@ -36,10 +36,12 @@
 
 ### 📒 记账
 
+- **Muse 账单同步**（可选，默认关闭）支持将专用对话中整理的逐笔账单，经自建 HTTPS 服务同步进账本。固定编号用于去重和修正，手机使用独立读取密钥，并支持 Android 后台同步。部署与连接器配置见 [Muse 账单同步](docs/muse-sync.md)。
+
 - 首页 FAB 数字键盘**快速记账**，支持支出 / 收入 / 转账三种类型；可选**「无账户」**只记金额、不计入任何账户余额；数字键盘支持**四则运算算式**（如 `500+800`），实时显示结果、算式不完整时提示；
 - **默认付款账户**：在「我的 → 设置」或账户详情页把某账户设为默认，记账时（含 AI 未识别到账户时）自动预选它，每个账本各自设置；
 - **AI 对话记账**（可选）：把「记一笔」按钮设为 AI 模式，用一句话（如「昨天打车 32」）自动解析出类型 / 金额 / 分类 / 账户 / 备注草稿，确认后落账；也可设为**点击手动、长按 AI**，一个按钮两种入口；自带 API Key + 请求地址（OpenAI 兼容），配置只存本机；
-- **截图识账 / 分享识账**（可选，需先配置 AI）：把账单**截图「分享」给 Veri Fin**（或在 AI 记账弹层里选相册截图），文字识别在**本机离线完成、图片绝不上传**，识别文本由 AI 解析成草稿确认落账；账单**文本**同样可分享识别。Veri Fin 本体**不监听任何通知或屏幕**——Tasker 等自动化工具可经 Intent 接口把账单文本送进来（见 [`docs/automation.md`](docs/automation.md)）；
+- **截图识账 / 分享识账**（可选，需先配置 AI）：把账单**截图「分享」给 Veri Fin**（或在 AI 记账弹层里选相册截图），文字识别在**本机离线完成、图片绝不上传**，识别文本由 AI 解析成草稿确认落账；账单**文本**同样可分享识别。Tasker 等自动化工具可经 Intent 接口把账单文本送进来（见 [`docs/automation.md`](docs/automation.md)）；
 - **多级分类**（任意层级树形结构）+ **多标签**（多对多，可筛选、可统计）；
 - 交易可附**图片票据**（拍照或相册，压缩后本地存储，随备份导出）；
 - **周期记账**（每天 / 周 / 月 / 年自动补记，如房租、工资）、**批量操作**（多选删除、改分类、改账户）；
@@ -68,7 +70,7 @@
 - **账单导入**：平台优先（先选来源再选文件）导入**支付宝**（CSV）、**微信**（xlsx）、**薄荷记账**（CSV）、**一木记账**（.xls，账单与转账还款两个入口；账单还原一级 → 二级分类层级、导入逗号分隔的多标签与备注）、**钱迹**（完整明细 CSV，覆盖支出/收入/转账/还款/退款/报销：退款自动冲抵原支出；债务/借贷类记录不导入——本应用无债务功能）、**Tally 记账**（备份 zip，无损保留精确时间与收支/转账、二级分类，并一并导入各账户当前余额与类型、含无流水的账户）账单，以及本应用 **CSV 模板**（第三方软件与 CSV 模板在选择器里分组展示；CSV 模板入口严格校验表头只允许模板列，各第三方软件各走独立入口、不再混用同一套表头识别）；自动跳过还款、理财等「不计收支/中性交易」，各平台附「如何导出账单」引导；导入预览页可对待新建的账户 / 分类 / 标签逐个改名或映射到现有条目——微信账单的「交易类型」（商户消费/微信红包等）会作为分类候选进入映射区，任何来源缺失分类的交易统一归入「未分类」（映射区可一键改到具体分类，不再产生「已删除的分类」）；
 - **应用锁**：6 位 PIN / 3×3 图案 + 生物解锁（密钥仅加盐哈希存本机，不保存任何生物特征数据）；启用后应用内容不可截屏、并从「最近任务」缩略图隐藏；
 - **备份范围**：备份包含全部账目数据与个人资料、主题/视图/面板/首页概览卡配置、默认账户、金额小数位、FAB 行为等展示偏好；**不包含**机密凭证（应用锁、备份口令、WebDAV 与 AI 密钥）和设备本地设置（语言、记账提醒、备份目录）——换机后这些需重设（完整清单见 [`docs/dev/tech-decisions.md`](docs/dev/tech-decisions.md)）；
-- 无账号、无服务器、无第三方 SDK；隐私政策与用户协议应用内可查。
+- 本地优先，联网服务由你主动配置；隐私政策与用户协议应用内可查。
 
 ### 🌍 体验
 
@@ -111,6 +113,8 @@ flutter analyze && flutter test      # 静态检查 + 全部测试
 Android 包名 `top.talyra42.verifin`。本地不构建交付 APK——正式安装包由 GitHub CI 生成。
 
 ## 📦 构建与发布
+
+测试安装包由 GitHub Actions 的 `Android Preview` 工作流生成，推送 `preview/**` 分支或手动运行时构建。预览应用名为 `VeriFin Muse Preview`，独立包名为 `top.talyra42.verifin.musepreview`，使用独立账本存储。构建产物位于 Actions 的 `verifin-muse-preview-arm64` 附件中，保留 14 天。
 
 - CI（`.github/workflows/flutter.yml`）只在推送 `vX.Y.Z` 标签时触发：analyze → test → `flutter build apk --release --target-platform android-arm64 --flavor github` + `flutter build appbundle --release --flavor play --dart-define=SELF_UPDATE=false` → 创建 GitHub Release（APK 命名 `verifin-vX.Y.Z-arm64-短提交号.apk`，AAB 命名 `verifin-vX.Y.Z-短提交号.aab`）。自建分发的**安装包只出 arm64-v8a 单架构 APK**（覆盖 2019 年后绝大多数机型、比 universal 约减半；极老 32 位设备装不了）；AAB 含全部 ABI，供 Google Play 上架用（由 Play 按设备分发）。release 开启 R8 代码/资源裁剪，反射依赖点由 `android/app/proguard-rules.pro` 的 keep 规则保护。
 - **分发渠道 flavor（`github` / `play`）**：应用内自更新（下载 GitHub Release 安装包自动更新）只用于 GitHub 自分发的 `github` flavor；Google Play 政策禁止应用自下载 APK 更新，故 `play` flavor 移除 `REQUEST_INSTALL_PACKAGES` 权限并隐藏「检查更新」入口。**本地 Android 构建/运行需带 `--flavor github`。**

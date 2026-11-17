@@ -3658,4 +3658,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get budgetCycleNotSet => 'Not set';
+
+  @override
+  String get museSyncBackground =>
+      'Sync runs when the app opens and approximately every 15 minutes in the Android background, subject to system scheduling. Payment methods go in notes. New bills use no account. Corrections retain the original ledger. Android Keystore encrypts the read credential separately from ledger backups. Reset disables sync.';
+
+  @override
+  String get museSyncBook => 'Ledger for new bills';
+
+  @override
+  String get museSyncDescription =>
+      'Muse submits individual bills to your HTTPS service. VeriFin imports them and updates corrections using stable IDs.';
+
+  @override
+  String get museSyncDone => 'Bill synchronization completed';
+
+  @override
+  String get museSyncEnabled => 'Automatic sync';
+
+  @override
+  String get museSyncError =>
+      'Bill sync failed. Check the HTTPS address, read credential, ledger and network. A restored server database may require reconfiguration.';
+
+  @override
+  String get museSyncNow => 'Save and sync now';
+
+  @override
+  String get museSyncSaved => 'Sync settings saved';
+
+  @override
+  String get museSyncTitle => 'Muse bill sync';
+
+  @override
+  String get museSyncToken => 'Phone read credential';
+
+  @override
+  String get museSyncTokenHint =>
+      'Required initially. Leave blank to keep the saved credential.';
+
+  @override
+  String get museSyncUrl => 'HTTPS server address';
+
+  @override
+  String get museSyncReload => 'Reload server bills';
+
+  @override
+  String get museSyncReloadHint =>
+      'Read all server bills again. Matching IDs update existing entries. Remote bills deleted on this phone will be imported again. Use this after restoring a server backup.';
 }

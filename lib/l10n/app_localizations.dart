@@ -6577,6 +6577,90 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'未设置'**
   String get budgetCycleNotSet;
+
+  /// No description provided for @museSyncBackground.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开应用时同步，Android 后台约每 15 分钟尝试一次，实际时间由系统安排。付款方式写入备注；新账单使用「无账户」。已导入记录的修正保留其原账本。读取密钥由 Android Keystore 加密，独立于账单备份。初始化会关闭同步。'**
+  String get museSyncBackground;
+
+  /// No description provided for @museSyncBook.
+  ///
+  /// In zh, this message translates to:
+  /// **'新账单保存到账本'**
+  String get museSyncBook;
+
+  /// No description provided for @museSyncDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'Muse 提交逐笔账单到你的 HTTPS 服务，VeriFin 下载后自动入账。相同编号的修正会更新原记录。'**
+  String get museSyncDescription;
+
+  /// No description provided for @museSyncDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'账单同步完成'**
+  String get museSyncDone;
+
+  /// No description provided for @museSyncEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动同步'**
+  String get museSyncEnabled;
+
+  /// No description provided for @museSyncError.
+  ///
+  /// In zh, this message translates to:
+  /// **'账单同步失败，请检查 HTTPS 地址、读取密钥、账本和网络。服务恢复备份后可能需要重新配置。'**
+  String get museSyncError;
+
+  /// No description provided for @museSyncNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存并立即同步'**
+  String get museSyncNow;
+
+  /// No description provided for @museSyncSaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步设置已保存'**
+  String get museSyncSaved;
+
+  /// No description provided for @museSyncTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'Muse 账单同步'**
+  String get museSyncTitle;
+
+  /// No description provided for @museSyncToken.
+  ///
+  /// In zh, this message translates to:
+  /// **'手机读取密钥'**
+  String get museSyncToken;
+
+  /// No description provided for @museSyncTokenHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'首次填写，留空沿用已保存的密钥'**
+  String get museSyncTokenHint;
+
+  /// No description provided for @museSyncUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'HTTPS 服务地址'**
+  String get museSyncUrl;
+
+  /// No description provided for @museSyncReload.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新读取服务器账单'**
+  String get museSyncReload;
+
+  /// No description provided for @museSyncReloadHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'从头读取服务器账单，相同编号会更新已有记录。已在手机删除的远程账单会再次导入。适用于服务器恢复备份后的重新同步。'**
+  String get museSyncReloadHint;
 }
 
 class _AppLocalizationsDelegate

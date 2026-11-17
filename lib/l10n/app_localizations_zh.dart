@@ -3571,4 +3571,49 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get budgetCycleNotSet => '未设置';
+
+  @override
+  String get museSyncBackground =>
+      '打开应用时同步，Android 后台约每 15 分钟尝试一次，实际时间由系统安排。付款方式写入备注；新账单使用「无账户」。已导入记录的修正保留其原账本。读取密钥由 Android Keystore 加密，独立于账单备份。初始化会关闭同步。';
+
+  @override
+  String get museSyncBook => '新账单保存到账本';
+
+  @override
+  String get museSyncDescription =>
+      'Muse 提交逐笔账单到你的 HTTPS 服务，VeriFin 下载后自动入账。相同编号的修正会更新原记录。';
+
+  @override
+  String get museSyncDone => '账单同步完成';
+
+  @override
+  String get museSyncEnabled => '自动同步';
+
+  @override
+  String get museSyncError => '账单同步失败，请检查 HTTPS 地址、读取密钥、账本和网络。服务恢复备份后可能需要重新配置。';
+
+  @override
+  String get museSyncNow => '保存并立即同步';
+
+  @override
+  String get museSyncSaved => '同步设置已保存';
+
+  @override
+  String get museSyncTitle => 'Muse 账单同步';
+
+  @override
+  String get museSyncToken => '手机读取密钥';
+
+  @override
+  String get museSyncTokenHint => '首次填写，留空沿用已保存的密钥';
+
+  @override
+  String get museSyncUrl => 'HTTPS 服务地址';
+
+  @override
+  String get museSyncReload => '重新读取服务器账单';
+
+  @override
+  String get museSyncReloadHint =>
+      '从头读取服务器账单，相同编号会更新已有记录。已在手机删除的远程账单会再次导入。适用于服务器恢复备份后的重新同步。';
 }

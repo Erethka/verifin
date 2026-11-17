@@ -10,6 +10,7 @@ import 'app/l10n_outside_context.dart';
 import 'app/logging/app_logger.dart';
 import 'app/models.dart';
 import 'app/platform_bridge.dart';
+import 'app/muse_sync_coordinator.dart';
 import 'app/reminder/notification_scheduler.dart';
 import 'app/reminder/reminder_settings.dart';
 import 'app/veri_fin_controller.dart';
@@ -179,6 +180,7 @@ class VeriFinApp extends StatefulWidget {
 class _VeriFinAppState extends State<VeriFinApp> with WidgetsBindingObserver {
   late final VeriFinController _controller = widget.controller;
   final NotificationScheduler _notifications = NotificationScheduler();
+  late final MuseSyncCoordinator _museSync = MuseSyncCoordinator(_controller);
   final GlobalKey<ScaffoldMessengerState> _messengerKey =
       GlobalKey<ScaffoldMessengerState>();
 
@@ -190,6 +192,7 @@ class _VeriFinAppState extends State<VeriFinApp> with WidgetsBindingObserver {
     _controller.onEntryAdded = _handleEntryAdded;
     // 落库失败时弹出「保存失败」提示，避免用户以为已保存。
     _controller.onPersistError = _handlePersistError;
+    unawaited(_museSync.start());
     // 应用锁开关变化时同步 FLAG_SECURE；开屏按当前状态对齐一次。
     _controller.onAppLockChanged = _handleAppLockChanged;
     AppSecurityBridge.setSecureFlag(_controller.appLockEnabled);
@@ -232,6 +235,7 @@ class _VeriFinAppState extends State<VeriFinApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(_museSync.sync());
       // 顺序约束：先补记到期的周期交易，再备份 / 推送小组件——顺序颠倒会把
       // 补记前的旧数据备份出去、推到桌面小组件上。
       _controller.applyDueRecurring(DateTime.now());
@@ -256,6 +260,7 @@ class _VeriFinAppState extends State<VeriFinApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _museSync.dispose();
     if (_controller.onEntryAdded == _handleEntryAdded) {
       _controller.onEntryAdded = null;
     }

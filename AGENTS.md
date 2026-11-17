@@ -10,7 +10,7 @@
 - `flutter test`：运行 `test/` 下的全部测试。
 - `scripts/publish.sh patch`：发布补丁版本，脚本会更新版本号、提交、创建 `vX.Y.Z` 标签并推送。Windows 上用等价的 `scripts/publish.ps1 patch`（PowerShell），两脚本逻辑一致，须同步维护。
 
-Android 安装包不在本机打包；最终 APK/AAB 由 GitHub CI 负责生成。普通提交不触发 Actions，只有推送 `vX.Y.Z` 标签时才构建。CI 出两种包：**GitHub 自分发的 arm64-v8a 单架构 APK（`--flavor github`）** 与 **Google Play 用的 AAB（`--flavor play --dart-define=SELF_UPDATE=false`）**，均开启 R8 代码/资源裁剪（体积约减半；反射依赖点靠 `proguard-rules.pro` keep 保护，新增反射依赖须补规则），默认发布 GitHub **预发布**（不标记 Latest）；真机验收通过后，在 GitHub 手动把该 release 改为正式版（设为 Latest）。不要在常规开发流程中运行或依赖本机 `flutter build apk` 作为交付依据。**分发渠道 flavor**：应用内自更新只用于 github flavor；play flavor 移除 `REQUEST_INSTALL_PACKAGES`（`android/app/src/play/AndroidManifest.xml`）并隐藏自更新入口（`kSelfUpdateEnabled`），以遵从 Play 政策。
+Android 安装包不在本机打包；最终 APK/AAB 由 GitHub CI 负责生成。正式发版构建由推送 `vX.Y.Z` 标签触发。`Android Preview` 工作流可在 `preview/**` 分支推送或手动运行时生成独立预览 APK，以 Actions 附件交付，包名为 `top.talyra42.verifin.musepreview`，附件保留 14 天。CI 出两种包：**GitHub 自分发的 arm64-v8a 单架构 APK（`--flavor github`）** 与 **Google Play 用的 AAB（`--flavor play --dart-define=SELF_UPDATE=false`）**，均开启 R8 代码/资源裁剪（体积约减半；反射依赖点靠 `proguard-rules.pro` keep 保护，新增反射依赖须补规则），默认发布 GitHub **预发布**（不标记 Latest）；真机验收通过后，在 GitHub 手动把该 release 改为正式版（设为 Latest）。不要在常规开发流程中运行或依赖本机 `flutter build apk` 作为交付依据。**分发渠道 flavor**：应用内自更新只用于 github flavor；play flavor 移除 `REQUEST_INSTALL_PACKAGES`（`android/app/src/play/AndroidManifest.xml`）并隐藏自更新入口（`kSelfUpdateEnabled`），以遵从 Play 政策。
 
 **发版必须经用户明确同意**：只有用户明说「发布 patch/minor/major 版本」之类时才发版，绝不擅自发版（打标签触发 CI、不可逆）。发版前先把 `CHANGELOG.md` 顶部的 `## [Unreleased]` 段改名为本次版本号加日期，并在其上新开一个空的 `## [Unreleased]`，随发版提交一起提交，再跑 `scripts/publish.sh`。
 
