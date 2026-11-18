@@ -37,7 +37,7 @@ Map<String, dynamic> page({
       'type': 'expense',
       'amount': amount,
       'currency': 'CNY',
-      if (category != null) 'category': category,
+      'category': ?category,
       'merchant': '面馆',
       'payment_method': 'Alipay',
       'note': '午饭',
