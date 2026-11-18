@@ -22,7 +22,11 @@ const config = MuseSyncConfig(
   enabled: true,
 );
 
-Map<String, dynamic> page({String amount = '12.50', int cursor = 1}) => {
+Map<String, dynamic> page({
+  String amount = '12.50',
+  int cursor = 1,
+  String? category,
+}) => {
   'stream': stream,
   'cursor': cursor,
   'has_more': false,
@@ -33,6 +37,7 @@ Map<String, dynamic> page({String amount = '12.50', int cursor = 1}) => {
       'type': 'expense',
       'amount': amount,
       'currency': 'CNY',
+      if (category != null) 'category': category,
       'merchant': '面馆',
       'payment_method': 'Alipay',
       'note': '午饭',
@@ -114,6 +119,38 @@ void main() {
     );
     expect(controller.museSyncConfig.encode(), isNot(contains(storedToken!)));
   });
+
+  test(
+    'Muse classifies a previously uncategorized bill without duplicating it',
+    () async {
+      final repo = InMemoryLedgerRepository();
+      final controller = await VeriFinController.create(
+        store(),
+        repository: repo,
+        systemIsEnglish: true,
+      );
+      await controller.syncMuseBills(fetch: (_, _) async => page());
+      final id = controller.entries.single.id;
+      expect(
+        controller.entries.single.categoryId,
+        uncategorizedCategoryId(EntryType.expense),
+      );
+
+      await controller.syncMuseBills(
+        fetch: (_, _) async => page(cursor: 2, category: ' 外卖 '),
+      );
+      expect(controller.entries.single.id, id);
+      expect(controller.entries.single.categoryId, 'dining');
+
+      await controller.syncMuseBills(
+        fetch: (_, _) async => page(cursor: 3, amount: '15.00'),
+      );
+      final persisted = (await repo.loadEntries()).single;
+      expect(persisted.id, id);
+      expect(persisted.categoryId, 'dining');
+      expect(persisted.amount, 15);
+    },
+  );
 
   test(
     'resetting read progress replays the server without duplicating entries',

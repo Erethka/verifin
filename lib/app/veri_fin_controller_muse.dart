@@ -156,19 +156,16 @@ mixin _ControllerMuse on _ControllerState, _ControllerOps {
       final type = row['type'] == 'expense'
           ? EntryType.expense
           : EntryType.income;
-      final matching = _categories.where(
-        (category) =>
-            category.type == type && category.label == row['category'],
-      );
-      final categoryId = matching.isEmpty
-          ? uncategorizedCategoryId(type)
-          : matching.first.id;
-      if (!_categories.any((category) => category.id == categoryId)) {
-        missingCategories.add(type);
-      }
       final id = 'muse_${stream}_${row['id']}';
       final index = _entries.indexWhere((entry) => entry.id == id);
       final existing = index < 0 ? null : _entries[index];
+      final categoryId =
+          _matchMuseCategory(row['category'] as String?, type) ??
+          (existing?.type == type ? existing?.categoryId : null) ??
+          uncategorizedCategoryId(type);
+      if (!_categories.any((category) => category.id == categoryId)) {
+        missingCategories.add(type);
+      }
       final note = [
         'Muse',
         row['merchant'],
@@ -227,5 +224,55 @@ mixin _ControllerMuse on _ControllerState, _ControllerOps {
     }
     if (updates.isNotEmpty) onEntryAdded?.call();
     return updates.length;
+  }
+
+  String? _matchMuseCategory(String? name, EntryType type) {
+    final label = normalizedCategoryLabel(name ?? '');
+    if (label.isEmpty || label == '未分类' || label == 'uncategorized') {
+      return null;
+    }
+
+    final available = _categories.where((category) => category.type == type);
+    final path = label.split('/').map((part) => part.trim()).join(' / ');
+    final matches = available.where((category) {
+      if (label.contains('/')) {
+        return normalizedCategoryLabel(pathLabel(_categories, category.id)) ==
+            path;
+      }
+      return normalizedCategoryLabel(category.label) == label;
+    }).toList();
+    if (matches.length == 1) return matches.single.id;
+    if (matches.isNotEmpty) return null;
+
+    const aliases = {
+      '饮食': 'dining',
+      '餐饮美食': 'dining',
+      '外卖': 'dining',
+      '交通出行': 'transport',
+      '出行': 'transport',
+      '日常购物': 'shopping',
+      '住房': 'housing',
+      '房租': 'housing',
+      '休闲娱乐': 'entertainment',
+      '医疗健康': 'medical',
+      '薪资': 'salary',
+      '薪水': 'salary',
+    };
+    final seeds = [
+      ...defaultCategories,
+      ...defaultCategoriesFor(english: true),
+    ];
+    final seed = seeds
+        .where(
+          (category) =>
+              category.type == type &&
+              normalizedCategoryLabel(category.label) == label,
+        )
+        .firstOrNull;
+    final candidateId = seed?.id ?? aliases[label] ?? label;
+    return available
+        .where((category) => category.id == candidateId)
+        .firstOrNull
+        ?.id;
   }
 }
